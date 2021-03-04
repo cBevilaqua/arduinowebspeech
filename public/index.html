@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<script src="/socket.io/socket.io.js"></script>
+	<style>
+		html, body {
+			height: 100%;
+		}
+
+		body {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			font-size: 30px;
+		}
+	</style>
+	<meta charset="utf-8">
+	<title>Webspeech</title>
+</head>
+<body>
+	<h1 id="text"></h1>
+	<script>
+
+		function setText(txt) {
+			document.getElementById("text").innerHTML = txt;
+		}
+
+		(function() {
+			var socket = io();
+
+			var SpeechRecognition = SpeechRecognition || webkitSpeechRecognition
+			var SpeechRecognitionEvent = SpeechRecognitionEvent || webkitSpeechRecognitionEvent
+
+			var recognition = new SpeechRecognition();
+
+			recognition.continuous = true;
+			recognition.lang = 'en-US';
+			recognition.interimResults = false;
+			recognition.start();
+
+			recognition.onresult = function(event) {
+				console.log("results ", event.results)
+
+				var lastResult = null;
+				if (event.results && event.results.length) {
+					lastResult = event.results[event.results.length-1];
+					var instruction = lastResult[0].transcript;
+				  console.log("RESULT ::: ", instruction);
+				  console.log('Confidence: ' + lastResult[0].confidence);
+
+				  if (instruction.indexOf("turn on") > -1) {
+				  	setText("Turn On");
+				  	socket.emit("turn-on")
+				  }
+
+				  if (instruction.indexOf("turn off") > -1) {
+				  	setText("Turn Off");
+				  	socket.emit("turn-off")
+				  }
+
+				  if (instruction.indexOf("blink") > -1) {
+				  	setText("Blink");
+				  	socket.emit("blink")
+				  }
+
+				  if (instruction.indexOf("stop") > -1) {
+				  	setText("Stop");
+				  	socket.emit("stop")
+				  }
+				}
+			}
+
+			recognition.onspeechend = function() {
+				console.log("speech end")
+			  //recognition.stop();
+			}
+
+			recognition.onnomatch = function(event) {
+				console.log("no match")
+			}
+
+			recognition.onerror = function(event) {
+			  console.log("recog error ", event.error)
+			}
+	})();
+	</script>
+
+</body>
+</html>
